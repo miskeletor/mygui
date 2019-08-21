@@ -21,6 +21,7 @@ include(CMakeDependentOption)
 include(MacroLogFeature)
 include(MyGUIConfigTargets)
 include(PreprocessorUtils)
+include(Utils)
 set(MYGUI_TEMPLATES_DIR "${MYGUI_SOURCE_DIR}/CMake/Templates")
 set(MYGUI_WORK_DIR ${MYGUI_BINARY_DIR})
 
@@ -118,10 +119,11 @@ set(MYGUI_RENDERSYSTEM 3 CACHE STRING
   3 - Ogre
   4 - OpenGL
   5 - Direct3D 9
-  6 - Direct3D 11"
+  6 - Direct3D 11
+  7 - OpenGL 3.x"
 )
 
-if(MYGUI_RENDERSYSTEM EQUAL 4)
+if(MYGUI_RENDERSYSTEM EQUAL 4 OR MYGUI_RENDERSYSTEM EQUAL 7)
 	option(MYGUI_USE_SYSTEM_GLEW "Use system OpenGL Extension Wrangler Library (GLEW)" FALSE)
 endif()
 
@@ -148,10 +150,15 @@ if (WIN32)
 	"Specify the Input Manager for samples. Possible values:
 	  1 - OIS
 	  2 - Win32
-	  3 - Win32 (Mouse) + OIS (Keyboard)"
+	  3 - Win32 (Mouse) + OIS (Keyboard)
+	  4 - SDL2"
 	)
 else()
 	set(MYGUI_SAMPLES_INPUT 1)
+endif()
+
+if(MYGUI_RENDERSYSTEM EQUAL 4)
+	set(MYGUI_SAMPLES_INPUT 4)
 endif()
 
 if (MSVC)
@@ -178,18 +185,25 @@ if (MYGUI_DONT_USE_OBSOLETE)
 endif ()
 # End of Global defines
 
+# Find dependencies
+include(Dependencies)
+
 # Set compiler specific build flags
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 	if (NOT MYGUI_HIGH_LEVEL_WARNINGS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 	else ()
+		if (MYGUI_USE_FREETYPE)
+			ignore_warnings(${FREETYPE_INCLUDE_DIRS})
+			ignore_warnings(${FREETYPE_FT2BUILD_INCLUDE_DIR})
+		endif ()
 		if (MYGUI_RENDERSYSTEM EQUAL 3)
 			# to avoid warnings from OGRE
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${OGRE_INCLUDE_DIR}")
+			ignore_warnings(${OGRE_INCLUDE_DIR})
 		endif ()
 		if (MYGUI_SAMPLES_INPUT EQUAL 1 OR MYGUI_SAMPLES_INPUT EQUAL 3)
 			# to avoid warnings from OIS
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${OIS_INCLUDE_DIR}")
+			ignore_warnings(${OIS_INCLUDE_DIR})
 		endif ()
 
 		if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -242,9 +256,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
 	# Otherwise, boost complains that there is no threading support.
 	SET(CMAKE_CXX_FLAGS "-pthread ${CMAKE_CXX_FLAGS}")
 endif ()
-
-# Find dependencies
-include(Dependencies)
 
 cmake_dependent_option(MYGUI_BUILD_DOCS "Generate documentation" TRUE "DOXYGEN_FOUND" FALSE)
 
@@ -315,3 +326,10 @@ add_subdirectory(CMake)
 
 # Provide CPack packaging target
 include(Packaging)
+
+# copy dlls required by SDL2 and SDL2_image
+if(WIN32)
+    if(MYGUI_RENDERSYSTEM EQUAL 4)
+    
+    endif(MYGUI_RENDERSYSTEM EQUAL 4)
+endif(WIN32)

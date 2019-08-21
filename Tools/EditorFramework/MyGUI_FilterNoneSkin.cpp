@@ -16,11 +16,13 @@
 #include <MyGUI_OgreTexture.h>
 #include <MyGUI_OgreVertexBuffer.h>
 #elif MYGUI_OPENGL_PLATFORM
-#include <MyGUI_OpenGlRenderManager.h>
+#include <MyGUI_OpenGLRenderManager.h>
 #elif MYGUI_DIRECTX_PLATFORM
 #include <MyGUI_DirectXRenderManager.h>
 #elif MYGUI_DIRECTX11_PLATFORM
 #include <MyGUI_DirectX11RenderManager.h>
+#elif MYGUI_OPENGL3_PLATFORM
+#include <MyGUI_OpenGL3RenderManager.h>
 #endif
 
 namespace MyGUI
@@ -76,6 +78,8 @@ namespace MyGUI
 		DirectXRenderManager::getInstancePtr()->doRender(_buffer, _texture, _count);
 #elif MYGUI_DIRECTX11_PLATFORM
 		DirectX11RenderManager::getInstancePtr()->doRender(_buffer, _texture, _count);
+#elif MYGUI_OPENGL3_PLATFORM
+	OpenGL3RenderManager::getInstancePtr()->doRender(_buffer, _texture, _count);
 #endif
 	}
 

@@ -72,6 +72,10 @@ namespace MyGUI
 		return 0;
 	}
 
+	void ResourceTrueTypeFont::textureInvalidate(ITexture* _texture)
+	{
+	}
+
 	std::vector<std::pair<Char, Char> > ResourceTrueTypeFont::getCodePointRanges() const
 	{
 		return std::vector<std::pair<Char, Char> >();
@@ -395,6 +399,12 @@ namespace MyGUI
 	int ResourceTrueTypeFont::getDefaultHeight()
 	{
 		return mDefaultHeight;
+	}
+
+	void ResourceTrueTypeFont::textureInvalidate(ITexture* _texture)
+	{
+		mGlyphMap.clear();
+		initialise();
 	}
 
 	std::vector<std::pair<Char, Char> > ResourceTrueTypeFont::getCodePointRanges() const
@@ -724,7 +734,8 @@ namespace MyGUI
 			if (texHeight > texWidth * 2)
 				texWidth *= 2;
 
-			int texX = 0, texY = 0;
+			int texX = mGlyphSpacing;
+			int texY = mGlyphSpacing;
 
 			for (GlyphHeightMap::const_iterator j = glyphHeightMap.begin(); j != glyphHeightMap.end(); ++j)
 			{
@@ -750,9 +761,16 @@ namespace MyGUI
 		// Create the texture and render the glyphs onto it.
 		//-------------------------------------------------------------------//
 
+		if (mTexture)
+		{
+			RenderManager::getInstance().destroyTexture( mTexture );
+			mTexture = nullptr;
+		}
+
 		mTexture = RenderManager::getInstance().createTexture(MyGUI::utility::toString((size_t)this, "_TrueTypeFont"));
 
 		mTexture->createManual(texWidth, texHeight, TextureUsage::Static | TextureUsage::Write, Pixel<LAMode>::getFormat());
+		mTexture->setInvalidateListener(this);
 
 		uint8* texBuffer = static_cast<uint8*>(mTexture->lock(TextureUsage::Write));
 
@@ -892,7 +910,7 @@ namespace MyGUI
 	{
 		if (_glyphWidth > 0 && _texX + mGlyphSpacing + _glyphWidth > _texWidth)
 		{
-			_texX = 0;
+			_texX = mGlyphSpacing;
 			_texY += mGlyphSpacing + _lineHeight;
 		}
 	}
@@ -949,7 +967,7 @@ namespace MyGUI
 		FT_Bitmap ftBitmap;
 		FT_Bitmap_New(&ftBitmap);
 
-		int texX = 0, texY = 0;
+		int texX = mGlyphSpacing, texY = mGlyphSpacing;
 
 		for (GlyphHeightMap::const_iterator j = _glyphHeightMap.begin(); j != _glyphHeightMap.end(); ++j)
 		{

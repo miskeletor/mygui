@@ -12,7 +12,7 @@
 namespace MyGUI
 {
 
-#if MYGUI_COMPILER == MYGUI_COMPILER_MSVC || MYGUI_PLATFORM == MYGUI_PLATFORM_APPLE
+#if MYGUI_COMPILER == MYGUI_COMPILER_MSVC
 	template <class T>
 	class Singleton
 #else
@@ -31,7 +31,8 @@ namespace MyGUI
 
 		virtual ~Singleton()
 		{
-			MYGUI_ASSERT(nullptr != msInstance, "Destroying Singleton instance " << getClassTypeName() << " before constructing it.");
+			if (nullptr == msInstance)
+				MYGUI_LOG(Critical, "Destroying Singleton instance " << getClassTypeName() << " before constructing it.");
 			msInstance = nullptr;
 		}
 

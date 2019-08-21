@@ -274,7 +274,8 @@ namespace MyGUI
 		if (MouseButton::Left != _id)
 			return;
 
-		if (mEnableRepeat && _sender != mWidgetTrack)
+		if (mEnableRepeat && _sender != mWidgetTrack
+			&& ((_sender != mWidgetFirstPart && _sender != mWidgetSecondPart) || !mMoveToClick))
 		{
 			ControllerItem* item = ControllerManager::getInstance().createItem(ControllerRepeatClick::getClassTypeName());
 			ControllerRepeatClick* controller = item->castType<ControllerRepeatClick>();
@@ -330,6 +331,8 @@ namespace MyGUI
 
 	void ScrollBar::notifyMouseDrag(Widget* _sender, int _left, int _top, MouseButton _id)
 	{
+		if (mScrollRange < 2)
+			return;
 		if (_id == MouseButton::Left)
 			TrackMove(_left, _top);
 	}
